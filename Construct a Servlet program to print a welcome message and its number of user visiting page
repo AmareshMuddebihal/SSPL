@@ -1,0 +1,76 @@
+To create a Servlet program that prints a welcome message along with the number of users visiting the page, you'll need to implement a basic Servlet that keeps track of the visitor count using application scope (ServletContext). Below is an example of how you can achieve this:
+
+Step 1: Set Up Your Servlet
+Create a new Java class that extends HttpServlet and override the doGet() method to handle HTTP GET requests.
+
+java
+Copy code
+import javax.servlet.*;
+import javax.servlet.http.*;
+import java.io.*;
+
+public class WelcomeServlet extends HttpServlet {
+
+    @Override
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Set content type and get PrintWriter
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        // Get ServletContext to access application scope
+        ServletContext servletContext = getServletContext();
+
+        // Increment visitor count
+        Integer visitorCount = (Integer) servletContext.getAttribute("visitorCount");
+        if (visitorCount == null) {
+            visitorCount = 1;
+        } else {
+            visitorCount++;
+        }
+        servletContext.setAttribute("visitorCount", visitorCount);
+
+        // Display welcome message with visitor count
+        out.println("<html><head><title>Welcome Page</title></head><body>");
+        out.println("<h1>Welcome to our website!</h1>");
+        out.println("<p>You are visitor number: " + visitorCount + "</p>");
+        out.println("</body></html>");
+
+        // Close PrintWriter
+        out.close();
+    }
+}
+Step 2: Register Your Servlet
+You need to register your Servlet in the web.xml deployment descriptor or use annotations (if you are using Servlet 3.0+).
+
+Option 1: Using web.xml (for Servlet 2.5 or below)
+Edit web.xml file in your WEB-INF directory to map your Servlet to a URL pattern:
+
+xml
+Copy code
+<servlet>
+    <servlet-name>WelcomeServlet</servlet-name>
+    <servlet-class>WelcomeServlet</servlet-class>
+</servlet>
+<servlet-mapping>
+    <servlet-name>WelcomeServlet</servlet-name>
+    <url-pattern>/welcome</url-pattern>
+</servlet-mapping>
+Option 2: Using Annotations (for Servlet 3.0+)
+Add @WebServlet annotation to your Servlet class:
+
+java
+Copy code
+import javax.servlet.annotation.WebServlet;
+
+@WebServlet("/welcome")
+public class WelcomeServlet extends HttpServlet {
+    // Servlet code here...
+}
+Step 3: Access Your Servlet
+Now you can access your Servlet by visiting the URL mapped to it (e.g., http://localhost:8080/your-web-app-name/welcome). Each time you refresh the page, the visitor count will increment and display the updated count along with the welcome message.
+
+Notes:
+Ensure that your Servlet container (e.g., Apache Tomcat) is running and your web application is deployed correctly.
+ServletContext is used here to store the visitor count in application scope, which means it will be shared among all users accessing the web application.
+This example demonstrates a simple use case of Servlets and basic HTML output. You can extend this example to include more complex logic and dynamic content.
+Make sure to handle thread safety if the visitor count is accessed and modified by multiple threads concurrently. Use synchronization or other thread-safe techniques if needed.
