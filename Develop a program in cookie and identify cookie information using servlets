@@ -1,0 +1,109 @@
+
+To develop a program in Java Servlets that utilizes cookies and identifies cookie information, you can create a simple example where a cookie is set by the servlet and then retrieved to display its value. This will demonstrate how to work with cookies using servlets. Below is an example implementation:
+
+Step 1: Create the Servlet
+Create a new Java class that extends HttpServlet and override the doGet() method to handle HTTP GET requests.
+
+java
+Copy code
+import javax.servlet.*;
+import javax.servlet.http.*;
+import java.io.*;
+
+public class CookieServlet extends HttpServlet {
+
+    @Override
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Check if a cookie named "user" exists
+        Cookie[] cookies = request.getCookies();
+        String username = null;
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (cookie.getName().equals("user")) {
+                    username = cookie.getValue();
+                    break;
+                }
+            }
+        }
+
+        // Set content type and get PrintWriter
+        response.setContentType("text/html");
+        PrintWriter out = response.getWriter();
+
+        // If username cookie is found, display a welcome message
+        if (username != null && !username.isEmpty()) {
+            out.println("<html><head><title>Cookie Example</title></head><body>");
+            out.println("<h1>Welcome back, " + username + "!</h1>");
+            out.println("<p>Your username was retrieved from the cookie.</p>");
+            out.println("</body></html>");
+        } else {
+            // If username cookie is not found, prompt for username
+            out.println("<html><head><title>Cookie Example</title></head><body>");
+            out.println("<h1>Welcome!</h1>");
+            out.println("<p>Please enter your username:</p>");
+            out.println("<form method='post' action='" + request.getContextPath() + "/setCookie'>");
+            out.println("<input type='text' name='username'>");
+            out.println("<input type='submit' value='Submit'>");
+            out.println("</form>");
+            out.println("</body></html>");
+        }
+
+        // Close PrintWriter
+        out.close();
+    }
+}
+Step 2: Create a Servlet to Set Cookie
+Create another servlet to handle the form submission and set the cookie.
+
+java
+Copy code
+import javax.servlet.*;
+import javax.servlet.http.*;
+import java.io.*;
+
+public class SetCookieServlet extends HttpServlet {
+
+    @Override
+    public void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        // Get username parameter from form submission
+        String username = request.getParameter("username");
+
+        // Create a new cookie named "user"
+        Cookie userCookie = new Cookie("user", username);
+
+        // Set cookie expiration (optional)
+        userCookie.setMaxAge(30 * 24 * 60 * 60); // Cookie expires in 30 days
+
+        // Add cookie to the HTTP response
+        response.addCookie(userCookie);
+
+        // Redirect back to the main servlet to display the welcome message
+        response.sendRedirect(request.getContextPath() + "/cookieExample");
+    }
+}
+Step 3: Register Your Servlets
+You can use annotations to specify the URL mapping for your servlets. Add the @WebServlet annotation to each servlet class:
+
+java
+Copy code
+import javax.servlet.annotation.WebServlet;
+
+@WebServlet("/cookieExample")
+public class CookieServlet extends HttpServlet {
+    // Servlet code here...
+}
+
+@WebServlet("/setCookie")
+public class SetCookieServlet extends HttpServlet {
+    // Servlet code here...
+}
+Step 4: Access Your Servlet
+Access your main servlet (CookieServlet) by visiting the mapped URL (e.g., http://localhost:8080/your-web-app-name/cookieExample). If no cookie is set, you will be prompted to enter your username. After submitting the form, the cookie will be set, and subsequent visits will display a welcome message using the cookie information.
+
+Notes:
+The Cookie object is used to create and manage cookies in Java Servlets. You can set various properties of the cookie, such as its name, value, expiration time, and path.
+Use request.getCookies() to retrieve an array of cookies sent by the client. Iterate through the array to find a specific cookie by its name ("user" in this example).
+Use response.addCookie() to add a cookie to the HTTP response, which will be sent back to the client.
+The response.sendRedirect() method is used to redirect the client to another servlet (SetCookieServlet) after submitting the form.
+This example demonstrates how to work with cookies in Java Servlets, allowing you to set and retrieve cookie information to personalize user experiences within your web application. Customize and extend this code based on your specific requirements and use cases.
