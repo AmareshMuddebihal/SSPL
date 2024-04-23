@@ -1,0 +1,87 @@
+Implementing JDBC transactions in Java allows you to manage a series of database operations as a single unit of work. Transactions ensure that all operations either commit successfully as a whole or roll back (undo) if any operation fails. Below is a detailed specification along with example code demonstrating how to use JDBC transactions to execute database operations within a transaction in Java.
+
+JDBC Transaction Specification:
+Establish Connection: Connect to the database using DriverManager.getConnection().
+Set Auto-Commit to False: Disable auto-commit mode on the connection using connection.setAutoCommit(false) to start a transaction.
+Create and Execute SQL Statements: Execute multiple SQL statements (e.g., INSERT, UPDATE, DELETE) within the transaction.
+Commit or Roll Back: After executing all statements, decide to commit the transaction (connection.commit()) or roll back the transaction (connection.rollback()) based on the outcome of operations.
+Handle Exceptions: Properly handle any exceptions that may occur during the transaction.
+Example Code:
+Here's an example Java class that demonstrates using JDBC transactions to perform database operations within a transaction in Java:
+
+java
+Copy code
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
+public class JDBCTransactionExample {
+
+    public static void main(String[] args) {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        try {
+            // Step 1: Establish connection
+            String url = "jdbc:mysql://localhost:3306/employee_db";
+            String username = "username";
+            String password = "password";
+            connection = DriverManager.getConnection(url, username, password);
+
+            // Step 2: Disable auto-commit to start a transaction
+            connection.setAutoCommit(false);
+
+            // Step 3: Create and execute SQL statements within the transaction
+            String sqlInsert = "INSERT INTO employees (name, age, position) VALUES (?, ?, ?)";
+            preparedStatement = connection.prepareStatement(sqlInsert);
+            preparedStatement.setString(1, "John Doe");
+            preparedStatement.setInt(2, 30);
+            preparedStatement.setString(3, "Manager");
+            preparedStatement.executeUpdate();
+
+            // Simulate an error by dividing by zero to trigger a SQLException
+            int x = 10 / 0;
+
+            // If no exception occurs, commit the transaction
+            connection.commit();
+            System.out.println("Transaction committed successfully!");
+
+        } catch (SQLException e) {
+            System.out.println("Transaction failed! Rolling back...");
+            e.printStackTrace();
+            try {
+                // Roll back the transaction if any error occurs
+                if (connection != null) {
+                    connection.rollback();
+                }
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+        } finally {
+            // Step 5: Close resources and restore auto-commit mode
+            try {
+                if (preparedStatement != null) {
+                    preparedStatement.close();
+                }
+                if (connection != null) {
+                    connection.setAutoCommit(true); // Restore auto-commit mode
+                    connection.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+Explanation:
+Step 1: Establish a connection to the MySQL database by providing the JDBC URL (url), username, and password to DriverManager.getConnection().
+Step 2: Disable auto-commit mode on the connection using connection.setAutoCommit(false) to start a transaction.
+Step 3: Execute SQL statements (e.g., INSERT) within the transaction using PreparedStatement.executeUpdate().
+Step 4: Handle exceptions (SQLException) within a try-catch block. If any exception occurs during the transaction, roll back (connection.rollback()) to undo changes.
+Step 5: Close the PreparedStatement and Connection objects in the finally block. Restore auto-commit mode (connection.setAutoCommit(true)) and close the connection.
+Notes:
+Replace localhost:3306/employee_db with your MySQL database host, port, and database name.
+Replace "username" and "password" with your MySQL database credentials.
+The example intentionally triggers a SQLException by dividing by zero (int x = 10 / 0;) to demonstrate transaction rollback.
+Use JDBC transactions to ensure that a series of database operations either commit as a whole or roll back if any operation fails.
